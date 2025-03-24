@@ -365,7 +365,8 @@ class Robot:
             logging.info(f"Torque disabled for Motor {id}")
 
     def move_motors(self, args, duration=None, degrees=False):
-        """Move motors while blocking. Waits for each movement in args to complete before continuing to the next one."""
+        """Move motors sequentially. If blocking is set in the config, 
+        waits for all movements in args to complete before continuing."""
 
         # translate into dynamixel compatible values if degrees=True
         if degrees == False:
@@ -453,7 +454,9 @@ class Robot:
         return 1
 
     def move_motors_sync(self, args, duration=None, degrees=False):
-        """Move motors without blocking. Completes all moves in args simultaneously using group sync write and read."""
+        """Move motors simultaneously using group sync write and read. 
+        If blocking is set in config, waits for all movements in args
+        to complete before continuing. """
         # translate into dynamixel compatible values if degrees=True
         if degrees == False:
             temp = args
