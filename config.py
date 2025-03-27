@@ -3,7 +3,7 @@
 
 ROBOT_330_LAB = {
     "controllers": {
-        "port": "/dev/tty.usbserial-FT5NUSRG",
+        "port": "/dev/tty.usbserial-FT78LLMJ",
         "protocol": 2,
         "baudrate": 1000000,
         "drivemode": 12,         # time-based profile and torque on by goal update 
