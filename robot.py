@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# TODO: velocity limit 
+
 import logging 
 import time
 
@@ -364,7 +366,7 @@ class Robot:
             self.packet_handler.write1ByteTxRx(self.port_handler, id, self.ADDR_TORQUE_ENABLE, self.TORQUE_DISABLE)
             logging.info(f"Torque disabled for Motor {id}")
 
-    def move_motors(self, args, duration=None, degrees=False):
+    def move_motors(self, args, duration=None, degrees=True):
         """Move motors sequentially. If blocking is set in the config, 
         waits for all movements in args to complete before continuing."""
 
@@ -453,7 +455,9 @@ class Robot:
 
         return 1
 
-    def move_motors_sync(self, args, duration=None, degrees=False):
+
+
+    def move_motors_sync(self, args, duration=None, degrees=True):
         """Move motors simultaneously using group sync write and read. 
         If blocking is set in config, waits for all movements in args
         to complete before continuing. """
@@ -539,6 +543,10 @@ class Robot:
                 logging.error(f"[ID:{dxl_id}] groupSyncWrite addparam failed for position")
                 quit()
 
+        # log movement for sanity check 
+        for dxl_id in targets:
+            logging.info(f"Moving ID {dxl_id} to position {targets[dxl_id]}")
+
         # Syncwrite goal positions
         dxl_comm_result = self.group_sync_write.txPacket()
         if dxl_comm_result != COMM_SUCCESS:
@@ -547,9 +555,37 @@ class Robot:
         # Clear syncwrite parameter storage
         self.group_sync_write.clearParam()
 
-        # spin until completion only if blocking is set to True in the config 
-        if self.blocking:
-            self.check_move_complete(motor_list=list(targets.keys()))
+        # # spin until completion only if blocking is set to True in the config 
+        # if self.blocking:
+        #     self.check_move_complete(motor_list=list(targets.keys()))
+        if (self.drive_mode == 12):
+            while 1:
+                # Count of motors reaching goal
+                goal_reached = 0
+ 
+                # Syncread present position
+                dxl_comm_result = self.group_sync_read.txRxPacket()
+                if dxl_comm_result != COMM_SUCCESS:
+                    print("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
+ 
+                # Check if groupsyncread data of each motor is available
+                for dxl_id in targets:
+                    # Get Dynamixel present position value
+                    if self.model_type == 350:
+                        dxl_present_position = self.group_sync_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL320_ADDR[self.ADDR_PRESENT_POSITION][1])
+                    elif self.model_type == 1200:
+                        dxl_present_position = self.group_sync_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL330_ADDR[self.ADDR_PRESENT_POSITION][1])
+ 
+                    logging.info(f"[ID:{dxl_id}] GoalPos:{targets[dxl_id]}  PresPos:{dxl_present_position}")
+ 
+                    if (not (abs(targets[dxl_id] - dxl_present_position) > 10)) and (self.id_to_name[dxl_id] != "base"):
+                        goal_reached += 1
+                    elif (not (abs(targets[dxl_id] - dxl_present_position) > 55)) and (self.id_to_name[dxl_id] == "base"):
+                        goal_reached += 1
+
+
+                if goal_reached == len(targets):
+                    break
 
         return 1
     
@@ -579,6 +615,8 @@ class Robot:
                 pos, _, _ = self.packet_handler.read2ByteTxRx(self.port_handler, motor, self.ADDR_GOAL_POSITION)
             targets.append(pos)
         
+        logging.info("In check move complete")
+
         # spin until completion
         while 1:
             goal_reached = 0
@@ -593,10 +631,16 @@ class Robot:
                 if not (abs(targets[elem] - pos) > 10):
                     goal_reached += 1
 
+            logging.info(f"Number goal reached = {goal_reached}")
+            
             if goal_reached == len(targets):
                 break
 
         return 
+    
+    def get_motor_ids(self):
+        """Returns the list of motor ids."""
+        return self.dxl_ids
 
 
     def clean_shutdown(self):

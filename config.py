@@ -1,6 +1,43 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+ROBOT_330_LAB = {
+    "controllers": {
+        "port": "/dev/tty.usbserial-FT5NUSRG",
+        "protocol": 2,
+        "baudrate": 1000000,
+        "drivemode": 12,         # time-based profile and torque on by goal update 
+        "blocking": True,
+    },
+    "motors": {
+        "base": {
+            "id": 4,
+            "type": 1200,       # code for XL-330
+            "angle_limit": [-150.0, 150.0],
+        },
+        "tower_1": {
+            "id": 1,
+            "type": 1200,
+            "angle_limit": [-150.0, 150.0],
+        },
+        "tower_2": {
+            "id": 2,
+            "type": 1200,
+            "angle_limit": [-150.0, 150.0],
+        },
+        "tower_3": {
+            "id": 3,
+            "type": 1200,
+            "angle_limit": [-150.0, 150.0],
+        },
+        "ears": {
+            "id": 5,
+            "type": 1200,
+            "angle_limit": [-150.0, 150.0]
+        }
+    }
+}
+
 ROBOT_330 = {
     "controllers": {
         "port": "/dev/tty.usbserial-FT9MIR1N",
@@ -11,22 +48,22 @@ ROBOT_330 = {
     },
     "motors": {
         "base": {
-            "id": 1,
+            "id": 4,
             "type": 1200,       # code for XL-330
             "angle_limit": [-150.0, 150.0],
         },
         "tower_1": {
-            "id": 2,
+            "id": 1,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_2": {
-            "id": 3,
+            "id": 2,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_3": {
-            "id": 4,
+            "id": 3,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
@@ -48,22 +85,22 @@ ROBOT_330_TIME = {
     },
     "motors": {
         "base": {
-            "id": 1,
+            "id": 4,
             "type": 1200,       # code for XL-330
             "angle_limit": [-150.0, 150.0],
         },
         "tower_1": {
-            "id": 2,
+            "id": 1,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_2": {
-            "id": 3,
+            "id": 2,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_3": {
-            "id": 4,
+            "id": 3,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
@@ -85,22 +122,22 @@ ROBOT_320 = {
     },
     "motors": {
         "base": {
-            "id": 1,
+            "id": 4,
             "type": 350,       # code for XL-320
             "angle_limit": [-150.0, 150.0],
         },
         "tower_1": {
-            "id": 2,
+            "id": 1,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_2": {
-            "id": 3,
+            "id": 2,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_3": {
-            "id": 4,
+            "id": 3,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
@@ -122,22 +159,22 @@ ROBOT_330_RPI = {
     },
     "motors": {
         "base": {
-            "id": 1,
+            "id": 4,
             "type": 1200,       # code for XL-330
             "angle_limit": [-150.0, 150.0],
         },
         "tower_1": {
-            "id": 2,
+            "id": 1,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_2": {
-            "id": 3,
+            "id": 2,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_3": {
-            "id": 4,
+            "id": 3,
             "type": 1200,
             "angle_limit": [-150.0, 150.0],
         },
@@ -159,22 +196,22 @@ ROBOT_320_RPI = {
     },
     "motors": {
         "base": {
-            "id": 1,
+            "id": 4,
             "type": 350,       # code for XL-320
             "angle_limit": [-150.0, 150.0],
         },
         "tower_1": {
-            "id": 2,
+            "id": 1,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_2": {
-            "id": 3,
+            "id": 2,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
         "tower_3": {
-            "id": 4,
+            "id": 3,
             "type": 350,
             "angle_limit": [-150.0, 150.0],
         },
