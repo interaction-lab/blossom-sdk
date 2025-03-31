@@ -1,3 +1,5 @@
+import log_conf
+
 from robot import *
 from config import ROBOT_330
 

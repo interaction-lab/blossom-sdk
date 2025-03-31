@@ -48,7 +48,8 @@ XL320_CONFIG = {
     "ADDR_TORQUE_LIMIT": 35,
     "ADDR_P_GAIN": 29,
     "ADDR_CW_ANGLE_LIMIT": 6,
-    "ADDR_CCW_ANGLE_LIMIT": 8
+    "ADDR_CCW_ANGLE_LIMIT": 8,
+    "ADDR_MOVING": 49
 }
 
 # ------------------- XL330-M288-T Control Table Definition ------------------
@@ -124,5 +125,9 @@ XL330_CONFIG = {
     "TORQUE_ENABLE" : 1,
     "TORQUE_DISABLE" : 0,
     "ADDR_MAX_POSITION_LIMIT": 48,
-    "ADDR_MIN_POSITION_LIMIT": 52
+    "ADDR_MIN_POSITION_LIMIT": 52,
+    "ADDR_MOVING_THRESHOLD": 24,
+    "ADDR_MOVING": 122
 }
+
+DRIVE_MODE_TIME = 0x4

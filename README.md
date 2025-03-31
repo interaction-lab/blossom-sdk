@@ -7,6 +7,7 @@ A repository for controlling XL320 and XL330 motors (in the shape of a Blossom).
 - control_table_defs.py : contains addresses for 320 and 330 control tables
 - conversion.py : contains functions to convert between degrees and DXL positions 
 - config.py : contains configuration dictionaries for a "robot" 
+- log.conf.py : contains the log definition and initiation
 - sequence.py : contains the Sequence class, used to play sequences on a "robot" 
 - Sequences : a directory of .json files containing sequences
 - sequence_schema.json : a json schema for validating sequence files
@@ -24,6 +25,8 @@ A repository for controlling XL320 and XL330 motors (in the shape of a Blossom).
 For XL-320 based robots, ensure you use a 7.4V power supply. 
 For XL-330 based robots, ensure you use a 5.0V power supply. 
 Hardware error statuses will be set if the input voltage is outside the expected range. 
+Flashing LEDs on a motor indicates a hardware error has occurred.  The most common error is out of range supply voltage.
+If you encounter a hardware error, use Dynamixel Wizard to reset or reload the motor.
 
 For all robots, the baud rate used should be 1,000,000. 
 You can check the baud rate of your motors using the [Dynamixel Wizard](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_wizard2/). 
@@ -38,7 +41,10 @@ For Macs, the name is typically of the format: "/dev/tty.usbserial-[XXXXXXXX]".
 **Do not mix and match motor types in a robot.** 
 This code does not support it. 
 
-## How to make a robot configuration
+## Calibrating the robot
+TODO
+
+## How to make a robot configuration dictionary
 Each configuration contains a "controllers" dictionary and a "motors" dictionary.
 
 "controllers" contains:
@@ -152,8 +158,9 @@ When installing via pip, you use a hyphen.
 
 ## What this code has been tested on 
 Computers:
-- MacBook Pro, Apple M3 Max, Sequoia 15.3.1
+- MacBook Pro, Apple M1 Max, M3 Max, and M4 Max, Sequoia 15.3.1
 - Raspberry Pi 4 B
+- Raspberry Pi 5
 
 Dynamixel Motors:
 - [XL330](https://emanual.robotis.com/docs/en/dxl/x/xl330-m288/)
@@ -163,8 +170,9 @@ Dynamixel Motors:
 All dynamixel motors are controlled by reading and writing values in a control table. 
 The XL330 control table is significantly larger than the XL320 control table. 
 This means that the XL330 has capabilities that the XL320s do not have. 
-While it may seem like the XL330 control table should be a simple extension of the XL320 control table (where all the 320 control table registers are present in the 330 control table), this is not the case. 
-Some registers are unique to each motor type.
+While it may seem like the XL330 control table should be a simple extension of the XL320 control table (where all the 320 control table registers are 
+present in the 330 control table), this is not the case. Some registers are unique to each motor type. Refer to the Dynamixel Motor documentation linked above 
+to better understand the capabilities and limitations of each motor type.
 
 The most important consequence of these different control tables is that XL-320s **do not** support a time-based profile (movements are controlled by duration), while XL-330s do. 
 

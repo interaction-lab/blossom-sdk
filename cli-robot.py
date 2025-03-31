@@ -1,4 +1,5 @@
 # only works with velocity-based profile robots 
+import log_conf
 
 from robot import *
 from config import *
