@@ -41,9 +41,6 @@ For Macs, the name is typically of the format: "/dev/tty.usbserial-[XXXXXXXX]".
 **Do not mix and match motor types in a robot.** 
 This code does not support it. 
 
-## Calibrating the robot
-TODO
-
 ## How to make a robot configuration dictionary
 Each configuration contains a "controllers" dictionary and a "motors" dictionary.
 
@@ -166,7 +163,7 @@ Dynamixel Motors:
 - [XL330](https://emanual.robotis.com/docs/en/dxl/x/xl330-m288/)
 - [XL320](https://emanual.robotis.com/docs/en/dxl/x/xl320/)
 
-# So why does my XL330 Blossom not behave like my XL320 Blossom? 
+## So why does my XL330 Blossom not behave like my XL320 Blossom? 
 All dynamixel motors are controlled by reading and writing values in a control table. 
 The XL330 control table is significantly larger than the XL320 control table. 
 This means that the XL330 has capabilities that the XL320s do not have. 
