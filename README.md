@@ -1,6 +1,6 @@
 # blossom-sdk
 
-A repository for controlling XL320 and XL330 motors (in the shape of a Blossom). 
+A repository for controlling XL320 and XL330 motors (in the shape of a [Blossom robot](https://github.com/hrc2/blossom-public)). 
 
 ### Required files 
 - robot.py : contains the Robot class, built using the dynamixel SDK
