@@ -1,7 +1,7 @@
-from sequence import *
-from config import *
-from robot import *
-import log_conf
+from blossom_sdk.sequence import *
+from blossom_sdk.config import *
+from blossom_sdk.robot import *
+import blossom_sdk.log_conf as log_conf
 
 
 my_robot = Robot(config_dict=ROBOT_320)

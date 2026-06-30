@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blossom-sdk"
+version = "1.0.0"
+description = "Controlling the Interaction Lab's implementation of the Blossom robot"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Emily Weiss", email = "emilymwe@usc.edu"}
+]
+
+dependencies = [
+    "dynamixel-sdk",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

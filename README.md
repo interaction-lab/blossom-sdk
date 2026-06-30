@@ -174,3 +174,38 @@ to better understand the capabilities and limitations of each motor type.
 The most important consequence of these different control tables is that XL-320s **do not** support a time-based profile (movements are controlled by duration), while XL-330s do. 
 
 Even in a velocity-based profile (movements are controlled by speed and acceleration), XL-330s may behave differently than XL-320s due to the additional registers in the XL-330 control table.
+
+## Package Installation
+
+
+Clone the repository and install the package in editable mode:
+
+```bash
+git clone https://github.com/interaction-lab/blossom-sdk.git
+cd blossom-sdk
+pip install -e .
+```
+
+This will install the `blossom_sdk` package along with its required dependencies.
+
+Once installed, you can import the package from any Python script:
+
+```python
+from blossom_sdk import ...
+```
+
+## Running the Example/Test Scripts
+
+The scripts in the `tests/` directory are intended as examples and manual test programs.
+
+From the repository root, you can run a script directly, for example:
+
+```bash
+python tests/test_330_lab.py
+```
+
+Because the package has been installed in editable mode (`pip install -e .`), these scripts can import `blossom_sdk` without requiring any additional configuration.
+
+> **Note:** These scripts are not unit tests; they are example/manual test programs for exercising the SDK.
+
+

@@ -5,7 +5,7 @@ import json
 import jsonschema
 from jsonschema import validate
 
-from robot import *
+from .robot import *
 
 SCHEMA_PATH = "Sequences/sequence_schema.json"
 

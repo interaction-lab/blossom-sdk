@@ -4,12 +4,13 @@
 # TODO: velocity limit 
 
 import time
-from log_conf import logger
+import threading
+from .log_conf import logger
 
 from dynamixel_sdk import *
 
-from control_table_defs import *
-from conversion import *
+from .control_table_defs import *
+from .conversion import *
 
 class Robot:
     def __init__(self, config_dict):
@@ -21,6 +22,7 @@ class Robot:
         self.protocol = config_controllers["protocol"]
         self.baud_rate = config_controllers["baudrate"]
         self.blocking = config_controllers["blocking"]
+        self._motor_lock = threading.RLock()
 
         # Initialize motor configuration from config_motors
         self._initialize_motor_config(config_motors)
@@ -333,37 +335,38 @@ class Robot:
         Inputs: args -- a list of str motor names or int ids, or a list containing only the string "all"
         Returns 1 if successful, 0 if input was invalid. 
         '''
-        # if checking all, do not specify additional motors 
-        if "all" in args and len(args) != 1:
-            return 0
+        with self._motor_lock:
+            # if checking all, do not specify additional motors 
+            if "all" in args and len(args) != 1:
+                return 0
 
-        if args[0] != "all":
-            for elem in args:
-                if self._resolve_motor_key(elem) is None:
-                    logger.error("%s not a valid motor name/id.", elem)
-                    return 0
+            if args[0] != "all":
+                for elem in args:
+                    if self._resolve_motor_key(elem) is None:
+                        logger.error("%s not a valid motor name/id.", elem)
+                        return 0
 
-        # get status of all motors 
-        if args[0] == "all":
-            for dxl_id in self.dxl_ids:
-                if self.model_type == 350:
-                    pos, _, _ = self.packet_handler.read2ByteTxRx(self.port_handler, dxl_id, self.ADDR_PRESENT_POSITION)
-                elif self.model_type == 1200:
-                    pos, _, _ = self.packet_handler.read4ByteTxRx(self.port_handler, dxl_id, self.ADDR_PRESENT_POSITION)
-                logger.info("Status Check: Motor %d Model Type: %d Position: %d", dxl_id, self.model_type, pos)
-        else:
-            for motor in args:
-                motor_id = self._resolve_motor_key(motor)
-                if motor_id is None:
-                    logger.error("%s not a valid motor name/id.", motor)
-                    continue
-                if self.model_type == 350:
-                    pos, _, _ = self.packet_handler.read2ByteTxRx(self.port_handler, motor_id, self.ADDR_PRESENT_POSITION)
-                elif self.model_type == 1200:
-                    pos, _, _ = self.packet_handler.read4ByteTxRx(self.port_handler, motor_id, self.ADDR_PRESENT_POSITION)
-                logger.info("Status Check: Motor %d Model Type: %d Position: %d", motor_id, self.model_type, pos)
-        
-        return 1
+            # get status of all motors 
+            if args[0] == "all":
+                for dxl_id in self.dxl_ids:
+                    if self.model_type == 350:
+                        pos, _, _ = self.packet_handler.read2ByteTxRx(self.port_handler, dxl_id, self.ADDR_PRESENT_POSITION)
+                    elif self.model_type == 1200:
+                        pos, _, _ = self.packet_handler.read4ByteTxRx(self.port_handler, dxl_id, self.ADDR_PRESENT_POSITION)
+                    logger.info("Status Check: Motor %d Model Type: %d Position: %d", dxl_id, self.model_type, pos)
+            else:
+                for motor in args:
+                    motor_id = self._resolve_motor_key(motor)
+                    if motor_id is None:
+                        logger.error("%s not a valid motor name/id.", motor)
+                        continue
+                    if self.model_type == 350:
+                        pos, _, _ = self.packet_handler.read2ByteTxRx(self.port_handler, motor_id, self.ADDR_PRESENT_POSITION)
+                    elif self.model_type == 1200:
+                        pos, _, _ = self.packet_handler.read4ByteTxRx(self.port_handler, motor_id, self.ADDR_PRESENT_POSITION)
+                    logger.info("Status Check: Motor %d Model Type: %d Position: %d", motor_id, self.model_type, pos)
+            
+            return 1
 
     def get_diagnostic(self, args):
         '''
@@ -372,37 +375,38 @@ class Robot:
         Inputs: args -- a list of str motor names or int ids, or a list containing only the string "all"
         Returns 1 if successful, 0 if input was invalid. 
         '''
-        # if checking all, do not specify additional motors 
-        if "all" in args and len(args) != 1:
-            return 0
-        
-        # if specifying motors, motors must be valid 
-        if args[0] != "all":
-            for elem in args:
-                if elem not in self.dxl_ids and elem not in self.names:
-                    logger.error("%s not a valid motor name/id.", elem)
-                    return 0
-        
-        # get error status of all motors 
-        if args[0] == "all":
-            for dxl_id in self.dxl_ids:
-                error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, dxl_id, self.ADDR_HARDWARE_ERROR_STATUS)                
-                logger.info("Diagnostic: Motor %d Error Status: %s", dxl_id, bin(error_status))
-                
-        # get status of specified motors 
-        else:
-            for motor in args:
-                if type(motor) == str:
-                    dxl_id = self.name_to_id[motor]
-
-                    error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, dxl_id, self.ADDR_HARDWARE_ERROR_STATUS)
+        with self._motor_lock:
+            # if checking all, do not specify additional motors 
+            if "all" in args and len(args) != 1:
+                return 0
+            
+            # if specifying motors, motors must be valid 
+            if args[0] != "all":
+                for elem in args:
+                    if elem not in self.dxl_ids and elem not in self.names:
+                        logger.error("%s not a valid motor name/id.", elem)
+                        return 0
+            
+            # get error status of all motors 
+            if args[0] == "all":
+                for dxl_id in self.dxl_ids:
+                    error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, dxl_id, self.ADDR_HARDWARE_ERROR_STATUS)                
                     logger.info("Diagnostic: Motor %d Error Status: %s", dxl_id, bin(error_status))
-                
-                elif type(motor) == int:
-                    error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, motor, self.ADDR_HARDWARE_ERROR_STATUS)
-                    logger.info("Diagnostic: Motor %d Error Status: %s", motor, bin(error_status))
-        
-        return 1
+                    
+            # get status of specified motors 
+            else:
+                for motor in args:
+                    if type(motor) == str:
+                        dxl_id = self.name_to_id[motor]
+
+                        error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, dxl_id, self.ADDR_HARDWARE_ERROR_STATUS)
+                        logger.info("Diagnostic: Motor %d Error Status: %s", dxl_id, bin(error_status))
+                    
+                    elif type(motor) == int:
+                        error_status, _, _ = self.packet_handler.read1ByteTxRx(self.port_handler, motor, self.ADDR_HARDWARE_ERROR_STATUS)
+                        logger.info("Diagnostic: Motor %d Error Status: %s", motor, bin(error_status))
+            
+            return 1
 
     def enable_torque(self):
         """Enables torque. Torque must be enabled before motors will move."""
@@ -419,183 +423,188 @@ class Robot:
     def move_motors(self, args, duration=None, degrees=True):
         """Move motors sequentially. If blocking is set in the config, 
         waits for all movements in args to complete before continuing."""
-        targets = self._prepare_targets(args, degrees=True, check_range=True)
-        if targets is None:
-            return 0
+        with self._motor_lock:
         
-        # set duration 
-        if (duration is not None) and (self.drive_mode & DRIVE_MODE_TIME != 0):
-            # check for valid times and motors 
-            motor_list = [key for key in duration]
-            times = {}
+            targets = self._prepare_targets(args, degrees=True, check_range=True)
+            if targets is None:
+                return 0
+            
+            # set duration 
+            if (duration is not None) and (self.drive_mode & DRIVE_MODE_TIME != 0):
+                # check for valid times and motors 
+                motor_list = [key for key in duration]
+                times = {}
 
-            for m in motor_list:
-                if type(m) == int:
-                    if m not in targets.keys():
-                        logger.error("Invalid motor provided %s.", m)
-                        return 0
-                    else:
-                        times[m] = duration[m]
-                elif type(m) == str:
-                    if m not in self.name_to_id.keys() or self.name_to_id[m] not in targets.keys():
-                        logger.error("Invalid motor provided %s.", m)
-                        return 0
-                    else:
-                        times[self.name_to_id[m]] = duration[m]
-                    
-            # change the times 
-            for id in times:
-                self.packet_handler.write4ByteTxRx(self.port_handler, id, self.ADDR_PROFILE_VELOCITY, times[id])
+                for m in motor_list:
+                    if type(m) == int:
+                        if m not in targets.keys():
+                            logger.error("Invalid motor provided %s.", m)
+                            return 0
+                        else:
+                            times[m] = duration[m]
+                    elif type(m) == str:
+                        if m not in self.name_to_id.keys() or self.name_to_id[m] not in targets.keys():
+                            logger.error("Invalid motor provided %s.", m)
+                            return 0
+                        else:
+                            times[self.name_to_id[m]] = duration[m]
+                        
+                # change the times 
+                for id in times:
+                    self.packet_handler.write4ByteTxRx(self.port_handler, id, self.ADDR_PROFILE_VELOCITY, times[id])
 
-        # make the moves 
-        if self.model_type == 350:
-            for dxl_id, goal_position in targets.items():
-                self.packet_handler.write2ByteTxRx(self.port_handler, dxl_id, self.ADDR_GOAL_POSITION, goal_position)
-                logger.info("Motor %d Model Type: %d moved to position %d", dxl_id, self.model_type, goal_position)
-        elif self.model_type == 1200:
-            for dxl_id, goal_position in targets.items():
-                self.packet_handler.write4ByteTxRx(self.port_handler, dxl_id, self.ADDR_GOAL_POSITION, goal_position)
-                logger.info("Motor %d Model Type: %d moved to position %d", dxl_id, self.model_type, goal_position)
+            # make the moves 
+            if self.model_type == 350:
+                for dxl_id, goal_position in targets.items():
+                    self.packet_handler.write2ByteTxRx(self.port_handler, dxl_id, self.ADDR_GOAL_POSITION, goal_position)
+                    logger.info("Motor %d Model Type: %d moved to position %d", dxl_id, self.model_type, goal_position)
+            elif self.model_type == 1200:
+                for dxl_id, goal_position in targets.items():
+                    self.packet_handler.write4ByteTxRx(self.port_handler, dxl_id, self.ADDR_GOAL_POSITION, goal_position)
+                    logger.info("Motor %d Model Type: %d moved to position %d", dxl_id, self.model_type, goal_position)
 
-        # spin until completion only if blocking is set to True in the config 
-        if self.blocking:
-            self.check_move_complete()
+            # spin until completion only if blocking is set to True in the config 
+            if self.blocking:
+                self.check_move_complete()
 
-        self.check_motor_status(["all"])
+            self.check_motor_status(["all"])
 
-        return 1
+            return 1
 
     def move_motors_sync(self, args, duration=None, degrees=True):
         """Move motors simultaneously using group sync write and read. 
         If blocking is set in config, waits for all movements in args
         to complete before continuing. """
-        targets = self._prepare_targets(args, degrees=degrees, check_range=False)
-        if targets is None:
-            return 0
+        with self._motor_lock:
+            targets = self._prepare_targets(args, degrees=degrees, check_range=False)
+            if targets is None:
+                return 0
 
-        # set durations if provided
-        if (duration is not None) and (self.drive_mode & DRIVE_MODE_TIME != 0):
-            motor_list = list(duration.keys())
-            times = {}
-            for m in motor_list:
-                motor_id = self._resolve_motor_key(m)
-                if motor_id is None or motor_id not in targets:
-                    logger.error("Invalid motor provided %s.", m)
-                    return 0
-                else:
-                    times[motor_id] = [DXL_LOBYTE(DXL_LOWORD(duration[m])), DXL_HIBYTE(DXL_LOWORD(duration[m])), DXL_LOBYTE(DXL_HIWORD(duration[m])), DXL_HIBYTE(DXL_HIWORD(duration[m]))]
-                    
-            # add each profile velocity to the Syncwrite storage 
-            for id in times:
-                dxl_addparam_result = self.group_duration_write.addParam(id, times[id])
+            # set durations if provided
+            if (duration is not None) and (self.drive_mode & DRIVE_MODE_TIME != 0):
+                motor_list = list(duration.keys())
+                times = {}
+                for m in motor_list:
+                    motor_id = self._resolve_motor_key(m)
+                    if motor_id is None or motor_id not in targets:
+                        logger.error("Invalid motor provided %s.", m)
+                        return 0
+                    else:
+                        times[motor_id] = [DXL_LOBYTE(DXL_LOWORD(duration[m])), DXL_HIBYTE(DXL_LOWORD(duration[m])), DXL_LOBYTE(DXL_HIWORD(duration[m])), DXL_HIBYTE(DXL_HIWORD(duration[m]))]
+                        
+                # add each profile velocity to the Syncwrite storage 
+                for id in times:
+                    dxl_addparam_result = self.group_duration_write.addParam(id, times[id])
+                    if dxl_addparam_result != True:
+                        logger.error("[ID:%d] group_duration_write addparam failed for duration", id)
+
+                # Syncwrite durations 
+                dxl_comm_result = self.group_duration_write.txPacket()
+                if dxl_comm_result != COMM_SUCCESS:
+                    logger.error("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
+
+                # clear storage 
+                self.group_duration_write.clearParam()                
+
+            # Allocate goal position value into byte array
+            param_goal_positions = {}
+            if self.model_type == 350:
+                for target in targets:
+                    param_goal_position = [DXL_LOBYTE(DXL_LOWORD(targets[target])), DXL_HIBYTE(DXL_LOWORD(targets[target]))]
+                    param_goal_positions[target] = param_goal_position
+
+            elif self.model_type == 1200:
+                for target in targets:
+                    param_goal_position = [DXL_LOBYTE(DXL_LOWORD(targets[target])), DXL_HIBYTE(DXL_LOWORD(targets[target])), DXL_LOBYTE(DXL_HIWORD(targets[target])), DXL_HIBYTE(DXL_HIWORD(targets[target]))]
+                    param_goal_positions[target] = param_goal_position
+
+            # add each dynamixel goal position value to the Syncwrite storage
+            for dxl_id in targets:
+                dxl_addparam_result = self.group_goal_write.addParam(dxl_id, param_goal_positions[dxl_id])
+
                 if dxl_addparam_result != True:
-                    logger.error("[ID:%d] group_duration_write addparam failed for duration", id)
+                    msg = f"[ID:{dxl_id}] group_goal_write addparam failed for position"
+                    logger.error(msg)
+                    raise RuntimeError(msg)
 
-            # Syncwrite durations 
-            dxl_comm_result = self.group_duration_write.txPacket()
-            if dxl_comm_result != COMM_SUCCESS:
-                logger.error("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
+            # log movement for sanity check 
+            for dxl_id in targets:
+                logger.debug("Moving ID %d to position %d", dxl_id, targets[dxl_id])
 
-            # clear storage 
-            self.group_duration_write.clearParam()                
+            # Syncwrite goal positions with error checking
+            try:
+                dxl_comm_result = self.group_goal_write.txPacket()
+                if dxl_comm_result != COMM_SUCCESS:
+                    logger.error("%s", self.packet_handler.getTxRxResult(dxl_comm_result))
+            except Exception as e:
+                logger.exception("Exception during group_goal_write.txPacket")
+                raise        # Clear syncwrite parameter storage
 
-        # Allocate goal position value into byte array
-        param_goal_positions = {}
-        if self.model_type == 350:
-            for target in targets:
-                param_goal_position = [DXL_LOBYTE(DXL_LOWORD(targets[target])), DXL_HIBYTE(DXL_LOWORD(targets[target]))]
-                param_goal_positions[target] = param_goal_position
+            self.group_goal_write.clearParam()
 
-        elif self.model_type == 1200:
-            for target in targets:
-                param_goal_position = [DXL_LOBYTE(DXL_LOWORD(targets[target])), DXL_HIBYTE(DXL_LOWORD(targets[target])), DXL_LOBYTE(DXL_HIWORD(targets[target])), DXL_HIBYTE(DXL_HIWORD(targets[target]))]
-                param_goal_positions[target] = param_goal_position
+            # # spin until completion only if blocking is set to True in the config 
+            if self.blocking:
+                self.check_move_complete()
 
-        # add each dynamixel goal position value to the Syncwrite storage
-        for dxl_id in targets:
-            dxl_addparam_result = self.group_goal_write.addParam(dxl_id, param_goal_positions[dxl_id])
+            self.check_motor_status(["all"])
 
-            if dxl_addparam_result != True:
-                msg = f"[ID:{dxl_id}] group_goal_write addparam failed for position"
-                logger.error(msg)
-                raise RuntimeError(msg)
-
-        # log movement for sanity check 
-        for dxl_id in targets:
-            logger.debug("Moving ID %d to position %d", dxl_id, targets[dxl_id])
-
-        # Syncwrite goal positions with error checking
-        try:
-            dxl_comm_result = self.group_goal_write.txPacket()
-            if dxl_comm_result != COMM_SUCCESS:
-                logger.error("%s", self.packet_handler.getTxRxResult(dxl_comm_result))
-        except Exception as e:
-            logger.exception("Exception during group_goal_write.txPacket")
-            raise        # Clear syncwrite parameter storage
-
-        self.group_goal_write.clearParam()
-
-        # # spin until completion only if blocking is set to True in the config 
-        if self.blocking:
-            self.check_move_complete()
-
-        self.check_motor_status(["all"])
-
-        return 1
+            return 1
     
     def get_positions(self):
         ''' Get all positions with group_position_read. May replace check_motor_status.'''
         # Syncread present position
-        dxl_comm_result = self.group_position_read.txRxPacket()
-        if dxl_comm_result != COMM_SUCCESS:
-            logger.info("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
-                
-        positions = {}
-        for dxl_id in self.dxl_ids:
-            if self.model_type == 350:
-                positions[dxl_id] = self.group_position_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL320_ADDR[self.ADDR_PRESENT_POSITION][1])
-            elif self.model_type == 1200:
-                positions[dxl_id] = self.group_position_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL330_ADDR[self.ADDR_PRESENT_POSITION][1])
+        with self._motor_lock:
+            dxl_comm_result = self.group_position_read.txRxPacket()
+            if dxl_comm_result != COMM_SUCCESS:
+                logger.info("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
+                    
+            positions = {}
+            for dxl_id in self.dxl_ids:
+                if self.model_type == 350:
+                    positions[dxl_id] = self.group_position_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL320_ADDR[self.ADDR_PRESENT_POSITION][1])
+                elif self.model_type == 1200:
+                    positions[dxl_id] = self.group_position_read.getData(dxl_id, self.ADDR_PRESENT_POSITION, CT_XL330_ADDR[self.ADDR_PRESENT_POSITION][1])
 
-        return positions 
+            return positions 
 
     def check_move_complete(self):
         ''' Given a list of motors, gets the goal and present positions. '''
-         # spin until completion
-        while 1:
-            goal_reached = 0
-            time.sleep(0.1)
+        with self._motor_lock:
+            # spin until completion
+            while 1:
+                goal_reached = 0
+                time.sleep(0.1)
 
-            # Syncread moving status
-            dxl_comm_result = self.group_move_read.txRxPacket()
-            if dxl_comm_result != COMM_SUCCESS:
-                logger.error("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
-                continue
+                # Syncread moving status
+                dxl_comm_result = self.group_move_read.txRxPacket()
+                if dxl_comm_result != COMM_SUCCESS:
+                    logger.error("%s" % self.packet_handler.getTxRxResult(dxl_comm_result))
+                    continue
 
-            for dxl_id in self.dxl_ids:
-                # Check if groupsyncread data of motor is available
-                if self.model_type == 350:
-                    dxl_getdata_result = self.group_move_read.isAvailable(dxl_id, self.ADDR_MOVING, CT_XL320_ADDR[self.ADDR_MOVING][1])
-                    if dxl_getdata_result != True:
-                        logger.error("[ID:%03d] group_move_read getdata failed" % dxl_id)
+                for dxl_id in self.dxl_ids:
+                    # Check if groupsyncread data of motor is available
+                    if self.model_type == 350:
+                        dxl_getdata_result = self.group_move_read.isAvailable(dxl_id, self.ADDR_MOVING, CT_XL320_ADDR[self.ADDR_MOVING][1])
+                        if dxl_getdata_result != True:
+                            logger.error("[ID:%03d] group_move_read getdata failed" % dxl_id)
 
-                    # Get motor moving status
-                    moving = self.group_move_read.getData(dxl_id, self.ADDR_MOVING, CT_XL320_ADDR[self.ADDR_MOVING][1])
-                elif self.model_type == 1200:
-                    dxl_getdata_result = self.group_move_read.isAvailable(dxl_id, self.ADDR_MOVING, CT_XL330_ADDR[self.ADDR_MOVING][1])
-                    if dxl_getdata_result != True:
-                        logger.error("[ID:%03d] group_move_read getdata failed" % dxl_id)
+                        # Get motor moving status
+                        moving = self.group_move_read.getData(dxl_id, self.ADDR_MOVING, CT_XL320_ADDR[self.ADDR_MOVING][1])
+                    elif self.model_type == 1200:
+                        dxl_getdata_result = self.group_move_read.isAvailable(dxl_id, self.ADDR_MOVING, CT_XL330_ADDR[self.ADDR_MOVING][1])
+                        if dxl_getdata_result != True:
+                            logger.error("[ID:%03d] group_move_read getdata failed" % dxl_id)
 
-                    # Get motor moving status
-                    moving = self.group_move_read.getData(dxl_id, self.ADDR_MOVING, CT_XL330_ADDR[self.ADDR_MOVING][1])
+                        # Get motor moving status
+                        moving = self.group_move_read.getData(dxl_id, self.ADDR_MOVING, CT_XL330_ADDR[self.ADDR_MOVING][1])
 
-                if not moving:
-                    goal_reached += 1
-                
-            if goal_reached == len(self.dxl_ids):
-                break
+                    if not moving:
+                        goal_reached += 1
+                    
+                if goal_reached == len(self.dxl_ids):
+                    break
 
-        return 
+            return 
     
     def get_motor_ids(self):
         """Returns the list of motor ids."""
@@ -603,10 +612,11 @@ class Robot:
 
     def clean_shutdown(self):
         """Makes a clean shutdown of the motors."""
-        logger.info("Initiating shutdown...")
+        with self._motor_lock:
+            logger.info("Initiating shutdown...")
 
-        self.disable_torque()
+            self.disable_torque()
 
-        self.port_handler.closePort()
+            self.port_handler.closePort()
 
-        logger.info("Shutdown complete.")
+            logger.info("Shutdown complete.")

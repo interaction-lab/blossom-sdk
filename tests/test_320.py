@@ -1,8 +1,8 @@
-from robot import *
-from config import *
+from blossom_sdk.robot import *
+from blossom_sdk.config import *
 import time
 
-from log_conf import logger
+from blossom_sdk.log_conf import logger
 
 my_robot = Robot(config_dict=ROBOT_320)
 

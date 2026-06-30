@@ -1,7 +1,7 @@
-import log_conf
+import blossom_sdk.log_conf as log_conf
 
-from robot import *
-from config import ROBOT_330_TIME
+from blossom_sdk.robot import *
+from blossom_sdk.config import ROBOT_330_TIME
 
 import time
 

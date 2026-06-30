@@ -1,9 +1,9 @@
 # only works with velocity-based profile robots 
-import log_conf
+import log_conf as log_conf
 
-from robot import *
-from config import *
-from sequence import *
+from .robot import *
+from .config import *
+from .sequence import *
 
 import threading
 import queue

@@ -13,7 +13,7 @@ import glob
 import time
 
 from dynamixel_sdk import *
-from conversion import *
+from .conversion import *
 
 # Modified from: https://poppy-project.github.io/pypot/_modules/pypot/dynamixel.html#_get_available_ports
 def get_available_ports():
