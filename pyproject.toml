@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Emily Weiss", email = "emilymwe@usc.edu"}
+    {name = "Emily Weiss", email = "emilymwe@usc.edu"},
+    {name="Mark Weiss", email="mwweiss_68106@icloud.com"},
 ]
 
 dependencies = [
